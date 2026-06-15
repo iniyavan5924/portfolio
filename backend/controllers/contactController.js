@@ -67,9 +67,9 @@ const submitContact = async (req, res, next) => {
                     resolvedHost = dnsResult.address;
                     console.log(`[SMTP] Local DNS resolved smtp.gmail.com to: ${resolvedHost}`);
                     
-                    // If the resolved IP starts with 192. (which is unroutable or conflicts with local subnets on some networks),
+                    // If the resolved IP starts with 192.168. (which is unroutable or conflicts with local subnets on some networks),
                     // we fall back to a known-stable public Google SMTP IP address.
-                    if (resolvedHost.startsWith('192.')) {
+                    if (resolvedHost.startsWith('192.168.')) {
                         const fallbackIPs = [
                             '142.250.192.108',
                             '74.125.136.108',

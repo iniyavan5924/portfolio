@@ -148,11 +148,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetTab === 'tech') {
                     const fills = targetContent.querySelectorAll('.progress-bar-fill');
                     fills.forEach(fill => {
-                        const originalWidth = fill.getAttribute('style').match(/width:\s*(\d+%)/)[1];
-                        fill.style.width = '0';
-                        setTimeout(() => {
-                            fill.style.width = originalWidth;
-                        }, 100);
+                        let originalWidth = fill.dataset.width;
+                        if (!originalWidth) {
+                            const styleAttr = fill.getAttribute('style');
+                            const match = styleAttr ? styleAttr.match(/width:\s*(\d+%)/) : null;
+                            if (match) {
+                                originalWidth = match[1];
+                                fill.dataset.width = originalWidth;
+                            }
+                        }
+                        if (originalWidth) {
+                            fill.style.width = '0';
+                            setTimeout(() => {
+                                fill.style.width = originalWidth;
+                            }, 100);
+                        }
                     });
                 }
             }
@@ -225,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 8. Contact Form Handling & Backend Integration ---
     
     // Auto-detect environments to switch between local development and production URLs
-    const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
         ? 'http://localhost:5000'
         : 'https://your-portfolio-backend.onrender.com'; // Replace with your Render URL after deployment
 

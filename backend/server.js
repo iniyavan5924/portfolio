@@ -15,7 +15,7 @@ const errorHandler = require('./middleware/errorHandler');
 // Initialize express app
 const app = express();
 
-// Connect to MongoDB Atlas
+// Connect to MongoDB Database
 connectDB();
 
 // 1. Security headers setup (Helmet)
