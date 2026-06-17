@@ -66,7 +66,7 @@ const submitContact = async (req, res, next) => {
                 if (dnsResult && dnsResult.address) {
                     resolvedHost = dnsResult.address;
                     console.log(`[SMTP] Local DNS resolved smtp.gmail.com to: ${resolvedHost}`);
-                    
+
                     // If the resolved IP starts with 192.168. (which is unroutable or conflicts with local subnets on some networks),
                     // we fall back to a known-stable public Google SMTP IP address.
                     if (resolvedHost.startsWith('192.168.')) {
@@ -187,8 +187,8 @@ const submitContact = async (req, res, next) => {
 
         try {
             // Verify transporter connection configuration
-            await transporter.verify();
-            console.log('[SMTP] Connection verified successfully and ready to dispatch emails.');
+            //await transporter.verify();
+            //console.log('[SMTP] Connection verified successfully and ready to dispatch emails.');
 
             // Send Notification Email (to Owner)
             try {
