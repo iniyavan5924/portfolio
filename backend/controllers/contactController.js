@@ -86,17 +86,20 @@ const submitContact = async (req, res, next) => {
 
             const cleanPass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : '';
             transporter = nodemailer.createTransport({
-
-                service: 'gmail',
-
+                host: resolvedHost,
+                port: 587,
+                secure: false, // Use STARTTLS
                 auth: {
-
                     user: process.env.EMAIL_USER,
-
                     pass: cleanPass
-
-                }
-
+                },
+                tls: {
+                    servername: 'smtp.gmail.com',
+                    rejectUnauthorized: true
+                },
+                connectionTimeout: 10000, // 10s connection timeout
+                greetingTimeout: 10000,
+                socketTimeout: 15000
             });
         }
 
@@ -184,8 +187,8 @@ const submitContact = async (req, res, next) => {
 
         try {
             // Verify transporter connection configuration
-            //await transporter.verify();
-            //console.log('[SMTP] Connection verified successfully and ready to dispatch emails.');
+            await transporter.verify();
+            console.log('[SMTP] Connection verified successfully and ready to dispatch emails.');
 
             // Send Notification Email (to Owner)
             try {
