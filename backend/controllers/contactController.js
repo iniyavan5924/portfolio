@@ -86,20 +86,17 @@ const submitContact = async (req, res, next) => {
 
             const cleanPass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : '';
             transporter = nodemailer.createTransport({
-                host: resolvedHost,
-                port: 587,
-                secure: false, // Use STARTTLS
+
+                service: 'gmail',
+
                 auth: {
+
                     user: process.env.EMAIL_USER,
+
                     pass: cleanPass
-                },
-                tls: {
-                    servername: 'smtp.gmail.com',
-                    rejectUnauthorized: true
-                },
-                connectionTimeout: 10000, // 10s connection timeout
-                greetingTimeout: 10000,
-                socketTimeout: 15000
+
+                }
+
             });
         }
 
