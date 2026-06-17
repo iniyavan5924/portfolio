@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggleBtn.addEventListener('click', () => {
         let theme = htmlElement.getAttribute('data-theme');
         let newTheme = theme === 'dark' ? 'light' : 'dark';
-        
+
         htmlElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
     });
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Find and display target content
             const targetTab = button.getAttribute('data-tab');
             const targetContent = document.getElementById(targetTab);
-            
+
             if (targetContent) {
                 targetContent.classList.add('active');
                 // Small delay to trigger smooth transition animation
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             function updateCount(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                
+
                 // Ease out quadratically
                 const easeValue = progress * (2 - progress);
                 const currentCount = Math.floor(easeValue * target);
@@ -212,11 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             projectCards.forEach(card => {
                 const cardCategory = card.getAttribute('data-category');
-                
+
                 // Card transitions
                 card.style.opacity = '0';
                 card.style.transform = 'scale(0.95) translateY(10px)';
-                
+
                 setTimeout(() => {
                     if (filterValue === 'all' || cardCategory === filterValue) {
                         card.classList.remove('hide');
@@ -233,20 +233,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 8. Contact Form Handling & Backend Integration ---
-    
+
     // Auto-detect environments to switch between local development and production URLs
     const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
         ? 'http://localhost:5000'
-        : 'https://your-portfolio-backend.onrender.com'; // Replace with your Render URL after deployment
+        : 'https://portfolio-s0jw.onrender.com'; // Replace with your Render URL after deployment
 
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         let isValid = true;
         const statusElement = document.getElementById('form-status');
         const submitBtn = contactForm.querySelector('.btn-submit');
         const formInputs = contactForm.querySelectorAll('input, textarea');
-        
+
         // Inputs list to check
         const fields = [
             { id: 'form-name', errorId: 'name-error', validate: val => val.trim() !== '' },
