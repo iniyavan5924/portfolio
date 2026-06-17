@@ -5,7 +5,6 @@
  */
 
 const { validationResult } = require('express-validator');
-const nodemailer = require('nodemailer');
 const Contact = require('../models/Contact');
 
 /**
@@ -34,44 +33,35 @@ const submitContact = async (req, res, next) => {
 
         console.log(`[Database] Submission successfully saved for: ${email}`);
 
-        // 3. Configure Nodemailer Transporter using Brevo SMTP Configurations
-        const smtpHost = process.env.BREVO_SMTP_HOST;
-        const smtpPort = process.env.BREVO_SMTP_PORT;
-        const smtpUser = process.env.BREVO_SMTP_USER;
-        const smtpPass = process.env.BREVO_SMTP_PASS;
+        // 3. Configure Brevo REST API Settings
+        const apiKey = process.env.BREVO_API_KEY;
         const senderEmail = process.env.SENDER_EMAIL;
 
         const isConfigured =
-            smtpHost && smtpHost !== 'your_brevo_smtp_host' &&
-            smtpPort &&
-            smtpUser && smtpUser !== 'your_brevo_login' &&
-            smtpPass && smtpPass !== 'your_brevo_smtp_key' &&
+            apiKey && apiKey !== 'your_brevo_api_key' &&
             senderEmail && senderEmail !== 'your_verified_brevo_sender';
 
         let emailSent = false;
         let emailErrorMsg = '';
 
         if (isConfigured) {
-            const transporter = nodemailer.createTransport({
-                host: smtpHost,
-                port: parseInt(smtpPort, 10),
-                secure: false, // port 587 uses STARTTLS
-                auth: {
-                    user: smtpUser,
-                    pass: smtpPass
-                },
-                connectionTimeout: 10000, // 10s connection timeout
-                greetingTimeout: 10000,
-                socketTimeout: 15000
-            });
-
             // Draft notification email (To You, the website owner)
-            const notificationMailOptions = {
-                from: `"${name} via Portfolio" <${senderEmail}>`,
-                to: senderEmail,
-                replyTo: email,
+            const notificationPayload = {
+                sender: {
+                    name: `${name} via Portfolio`,
+                    email: senderEmail
+                },
+                to: [
+                    {
+                        email: senderEmail
+                    }
+                ],
+                replyTo: {
+                    email: email,
+                    name: name
+                },
                 subject: `💼 New Portfolio Message: ${subject}`,
-                html: `
+                htmlContent: `
                     <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                         <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 20px; text-align: center; color: white;">
                             <h2 style="margin: 0; font-size: 24px;">New Message Received</h2>
@@ -108,11 +98,19 @@ const submitContact = async (req, res, next) => {
             };
 
             // Draft confirmation auto-reply email (To the visitor)
-            const confirmationMailOptions = {
-                from: `"Iniyavan" <${senderEmail}>`,
-                to: email,
+            const confirmationPayload = {
+                sender: {
+                    name: "Iniyavan",
+                    email: senderEmail
+                },
+                to: [
+                    {
+                        email: email,
+                        name: name
+                    }
+                ],
                 subject: `👋 Thank you for reaching out, ${name}!`,
-                html: `
+                htmlContent: `
                     <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                         <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 20px; text-align: center; color: white;">
                             <h2 style="margin: 0; font-size: 24px;">Thank You!</h2>
@@ -137,26 +135,53 @@ const submitContact = async (req, res, next) => {
                 `
             };
 
-            try {
-                // Verify transporter connection configuration
-                await transporter.verify();
+            const sendBrevoEmail = async (payload) => {
+                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                        'api-key': apiKey,
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorDetails;
+                    try {
+                        errorDetails = JSON.parse(errorText);
+                    } catch {
+                        errorDetails = errorText;
+                    }
+                    const err = new Error(`Brevo API status ${response.status}`);
+                    err.details = errorDetails;
+                    throw err;
+                }
+                return await response.json();
+            };
+
+            try {
                 // Send both emails in parallel
                 await Promise.all([
-                    transporter.sendMail(notificationMailOptions),
-                    transporter.sendMail(confirmationMailOptions)
+                    sendBrevoEmail(notificationPayload),
+                    sendBrevoEmail(confirmationPayload)
                 ]);
 
-                console.log(`[Brevo SMTP] Successfully sent notification and confirmation emails.`);
+                console.log(`[Brevo API] Successfully sent notification and confirmation emails.`);
                 emailSent = true;
-            } catch (smtpError) {
-                console.error(`[Brevo SMTP Error] Failed to send email via SMTP:`);
-                console.error(smtpError);
-                emailErrorMsg = smtpError.message;
+            } catch (brevoError) {
+                console.error(`[Brevo API Error] Failed to send email via REST API:`);
+                console.error(brevoError);
+
+                // Log the exact Brevo error details
+                const loggedError = brevoError.details ? JSON.stringify(brevoError.details) : brevoError.message;
+                console.error(`Exact Brevo Error details: ${loggedError}`);
+                emailErrorMsg = loggedError;
             }
         } else {
-            console.log('[Brevo SMTP Warning] SMTP credentials are not fully configured. Skipping email dispatch.');
-            emailErrorMsg = 'Brevo SMTP credentials not configured.';
+            console.log('[Brevo API Warning] Brevo API credentials are not fully configured. Skipping email dispatch.');
+            emailErrorMsg = 'Brevo API credentials not configured.';
         }
 
         // 4. Return API response to frontend client

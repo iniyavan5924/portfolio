@@ -25,7 +25,7 @@ const connectDB = async () => {
         if (!primaryURI) {
             throw new Error('Primary MONGO_URI is not set in environment.');
         }
-        const conn = await mongoose.connect(primaryURI, { family: 4 });
+        const conn = await mongoose.connect(primaryURI, { family: 4, serverSelectionTimeoutMS: 2000 });
         console.log(`[Database] MongoDB Connected successfully (Primary): ${conn.connection.host}`);
     } catch (error) {
         console.error(`[Database] Error connecting to primary MongoDB: ${error.message}`);
