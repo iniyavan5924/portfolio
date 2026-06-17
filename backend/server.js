@@ -27,12 +27,26 @@ const corsOptions = {
         const allowedOrigins = [
             process.env.FRONTEND_URL || 'http://localhost:8080',
             'http://127.0.0.1:8080',
-            'http://localhost:8080'
+            'http://localhost:8080',
+            'http://127.0.0.1:5500', // VS Code Live Server default
+            'http://localhost:5500'
         ];
-        // Allow if no origin (e.g. server-to-server/cURL) or if matched in whitelist, or in development mode
-        if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+
+        // Allow if no origin (e.g. server-to-server/cURL or Postman)
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        const isAllowedOrigin = allowedOrigins.includes(origin);
+
+        // Regex pattern to support Vercel preview and branch deployments
+        // Matches e.g., https://portfolio-iota-ebon-utvm1d2ufn.vercel.app and https://portfolio-ini-a209acf5.vercel.app
+        const isVercelPreview = /^https:\/\/portfolio-[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+
+        if (isAllowedOrigin || isVercelPreview || process.env.NODE_ENV !== 'production') {
             callback(null, true);
         } else {
+            console.warn(`[CORS Blocked] Request from origin: ${origin}`);
             callback(new Error('Not allowed by CORS policy'));
         }
     },
